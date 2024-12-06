@@ -1,0 +1,14 @@
+/node_modules/
+/dist/
+
+*.log
+
+.vscode/
+*.sublime-workspace
+
+/test/
+
+*~ 
+*.bkup 
+
+test.db
