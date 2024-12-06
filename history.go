@@ -8,56 +8,73 @@ import (
 	"github.com/ktr0731/go-fuzzyfinder"
 )
 
-func updateClipboards(c *[]Clipboard, db *Repository, offset, limit int) {
-	newCbPage := db.read(offset, limit)
-	if len(newCbPage) == 0 {
+func update(c *[]Clipboard, db *Repository, offset, limit int) {
+	page, err := db.read(offset, limit)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if len(page) == 0 {
 		return
 	}
-	*c = append(*c, newCbPage...)
+
+	*c = append(*c, page...)
 }
 
-func ListHistories() {
+func ListHistories(dbPath string) error {
+	db, err := NewRepository(dbPath)
+	if err != nil {
+		return err
+	}
 
-	db := NewRepository("./test.db")
+	offset, limit := 0, 20
+	total, err := db.count()
+	if err != nil {
+		return err
+	}
 
-	var mu sync.Mutex
+	history, err := db.read(offset, limit)
+	if err != nil {
+		return err
+	}
 
-	offset := 0
-	limit := 20
-
-	count := db.count()
-	clipboards := db.read(offset, limit)
-
-	noitem := make(chan *byte, 1)
-	go func(msg chan *byte) {
-		for range msg {
-			if offset < int(count) {
+	// Channel to signal when more items are needed
+	loadMore := make(chan struct{}, 1)
+	go func() {
+		for range loadMore {
+			if offset < int(total) {
 				offset += limit
-				updateClipboards(&clipboards, db, offset, limit)
+				update(&history, db, offset, limit)
 			}
 		}
-	}(noitem)
+	}()
 
+	var mu sync.Mutex
 	// fuzzy-finder
 	idx, err := fuzzyfinder.FindMulti(
-		&clipboards,
+		&history,
 		func(i int) string {
-			return clipboards[i].Bytes
+			return history[i].ClipText
 		},
 		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
 			if i == -1 {
 				mu.Lock()
 				defer mu.Unlock()
-				noitem <- nil
+				loadMore <- struct{}{}
 				return ""
 			}
-			return fmt.Sprint(clipboards[i].Bytes)
+			return fmt.Sprint(history[i].ClipText)
 		}),
 		fuzzyfinder.WithHotReloadLock(&mu),
 	)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	selectedItem := string(clipboards[idx[0]].Bytes)
-	fmt.Print(selectedItem)
+
+	// Print selected item
+	if len(idx) > 0 {
+		fmt.Print(string(history[idx[0]].ClipText))
+	}
+
+	return nil
 }
