@@ -63,3 +63,7 @@ That's it! 🚀
 Sync Across Machines: Integrate with Litestream to sync clipboard history between machines seamlessly.
 
 Clipboard Server: Run clipy as a centralized clipboard server to share and manage history across multiple devices.
+
+## License
+
+[MIT](LICENSE)
