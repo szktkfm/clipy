@@ -52,6 +52,12 @@ var (
 				return
 			}
 
+			limit, err := cmd.Flags().GetInt("limit")
+			if err != nil {
+				cmd.PrintErrln(err)
+				return
+			}
+
 			tmux, err := cmd.Flags().GetBool("tmux")
 			if err != nil {
 				cmd.PrintErrln(err)
@@ -63,7 +69,7 @@ var (
 				var tmuxErr *TmuxError
 				if err != nil {
 					if errors.As(err, &tmuxErr) {
-						err = clipy.ListHistories(config)
+						err = clipy.ListHistories(config, limit)
 					}
 					if err != nil {
 						cmd.PrintErrln(err)
@@ -75,7 +81,7 @@ var (
 				}
 			}
 
-			if err := clipy.ListHistories(config); err != nil {
+			if err := clipy.ListHistories(config, limit); err != nil {
 				cmd.PrintErrln(err)
 				return
 			}
@@ -190,6 +196,12 @@ func init() {
 		"tmux",
 		false,
 		"list histories in tmux popup",
+	)
+
+	listHistoryCmd.Flags().Int(
+		"limit",
+		20,
+		"Limit the number of clipboard history items displayed",
 	)
 
 	rootCmd.AddCommand(listHistoryCmd)

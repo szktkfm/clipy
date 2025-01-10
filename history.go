@@ -21,13 +21,13 @@ func update(c *[]Clipboard, db *Repository, offset, limit int) {
 	*c = append(*c, page...)
 }
 
-func ListHistories(dbPath string) error {
+func ListHistories(dbPath string, limit int) error {
 	db, err := NewRepository(dbPath)
 	if err != nil {
 		return err
 	}
 
-	offset, limit := 0, 20
+	offset := 0
 	total, err := db.count()
 	if err != nil {
 		return err
