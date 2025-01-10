@@ -54,6 +54,13 @@ Access your clipboard history with the `clipy history` command. If you've set up
 $ clipy history 
 ```
 
+
+Use the `--limit` option to specify the maximum number of entries to display initially.
+
+```sh
+$ clipy history --limit 100
+```
+
 If you're using tmux, you can display the history in a popup using `tmux display-popup`.
 
 That's it! 🚀
